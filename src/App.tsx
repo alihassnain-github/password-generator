@@ -1,8 +1,9 @@
+import { Clipboard, Check } from "lucide-react"
 import { Button } from "./components/ui/button"
 import { Input } from "./components/ui/input"
 import { Slider } from "./components/ui/slider"
 import { Checkbox } from "./components/ui/checkbox"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 export default function Home() {
 
@@ -10,6 +11,9 @@ export default function Home() {
   const [length, setLength] = useState(8);
   const [allowNum, setAllowNum] = useState(false);
   const [allowChar, setAllowChar] = useState(false);
+
+  const passwordRef = useRef<null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   const passwordGenerator = useCallback(() => {
 
@@ -20,12 +24,30 @@ export default function Home() {
     if (allowChar) str += "!@#$%^&*()_-+="
 
     for (let i = 1; i <= length; i++) {
-      let nums = Math.floor(Math.random() * str.length + 1)
-      pass = str.charAt(nums)
+      let randomNum = Math.floor(Math.random() * str.length + 1)
+      pass += str.charAt(randomNum)
     }
 
     setPassword(pass)
 
+  }, [length, allowNum, allowChar])
+
+  const copyPassword = useCallback(() => {
+    navigator.clipboard.writeText(password)
+      .then(() => {
+        setIsCopied(true)
+        setTimeout(() => {
+          setIsCopied(false)
+        }, 1000);
+      })
+      .catch((error) => {
+        console.log(error);
+        setIsCopied(false)
+      })
+  }, [password])
+
+  useEffect(() => {
+    passwordGenerator()
   }, [length, allowNum, allowChar])
 
   return (
@@ -33,8 +55,8 @@ export default function Home() {
       <div className="border-2 rounded-md p-4 sm:w-full md:w-3/4 lg:w-1/2">
         <h1 className="text-center font-medium text-2xl">Password Generator</h1>
         <div className="flex w-full items-center space-x-2 my-6">
-          <Input type="text" value={password} readOnly className="cursor-default" />
-          <Button type="submit">Copy</Button>
+          <Input ref={passwordRef} type="text" value={password} readOnly className="cursor-default" />
+          <Button onClick={copyPassword} size="icon">{isCopied ? <Check /> : <Clipboard />}</Button>
         </div>
         <div className="flex gap-4 items-center my-6">
           <Slider
@@ -64,6 +86,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-    </main>
+    </main >
   )
 }
